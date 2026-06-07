@@ -4,9 +4,9 @@ from services.transformer_classifier import transformer_scam_score
 from services.bert_classifier import bert_scam_score
 from models.response import ScanResponse
 
-W_PATTERN = 0.30
-W_ML      = 0.30
-W_BERT    = 0.25
+W_PATTERN = 0.25
+W_ML      = 0.25
+W_BERT    = 0.35
 W_TRANS   = 0.15
 
 # Words that strongly indicate legitimate content
@@ -18,7 +18,29 @@ LEGITIMATE_SIGNALS = [
     "weather", "news", "result", "exam", "admission",
     "followers", "following", "likes", "views",
     "good morning", "good night", "happy birthday",
-    "travel", "trip", "vacation", "hotel", "flight",
+    "travel", "trip", "vacation", "hotel", "flight","ipsos", "isay", "terms & conditions apply", "terms and conditions apply",
+    "get paid for your opinions", "survey",
+    # Government / awareness content
+"cybercrime.gov.in",
+"cyberdost",
+"ministry of home affairs",
+"never disclose",
+"be cautious",
+"safe online",
+"report to your bank",
+"contact local police",
+"dial 100",
+"national cyber crime",
+"register a complaint",
+"track your complaint",
+"following tips",
+"always ensure",
+"always remember",
+"precaution",
+"awareness",
+"antivirus",
+"strong password",
+"two factor",
 ]
 
 def has_legitimate_signal(text: str) -> bool:
@@ -35,7 +57,7 @@ def ensemble_detect(ocr_text: str = "", caption: str = "", image_bytes: bytes = 
     bert_score     = bert_scam_score(combined_text)
     trans_score, trans_category = transformer_scam_score(combined_text)
 
-    # If strong legitimate signal exists, cap BERT influence
+    # If strong legitimate signal exists, cap BERT and ML influence
     if has_legitimate_signal(combined_text):
         bert_score = min(bert_score, 0.55)
         ml_score   = min(ml_score, 0.55)
@@ -48,11 +70,15 @@ def ensemble_detect(ocr_text: str = "", caption: str = "", image_bytes: bytes = 
         W_TRANS   * trans_score
     )
 
-    # Only boost if MULTIPLE layers agree
+    # Single strong signal boost — BERT very confident + Trans not dismissing
+    if bert_score >= 0.85 and trans_score >= 0.20:
+        final_score = max(final_score, bert_score * 0.75)
+
+    # Multi-layer boost — all layers agree
     if bert_score >= 0.75 and ml_score >= 0.65 and pattern_score >= 0.50:
         final_score = max(final_score, (bert_score + ml_score + pattern_score) / 3)
 
-    # Only apply CRITICAL override if pattern is very strong
+    # Critical override — pattern very strong
     if pattern_score >= 0.90 and ml_score >= 0.60:
         final_score = max(final_score, 0.82)
 
@@ -85,14 +111,14 @@ def ensemble_detect(ocr_text: str = "", caption: str = "", image_bytes: bytes = 
         evidence.append(f"Transformer: flagged as {trans_category.replace('_', ' ')}")
 
     explanation = (
-        f"4-layer ensemble — "
-        f"Pattern: {round(pattern_score*100)}% | "
-        f"ML: {round(ml_score*100)}% | "
-        f"BERT: {round(bert_score*100)}% | "
-        f"Transformer: {round(trans_score*100)}% | "
-        f"Final: {round(final_score*100)}%. "
-        f"{pattern_result.explanation}"
-    )
+    f"4-layer ensemble — "
+    f"Pattern: {round(pattern_score*100)}% | "
+    f"ML: {round(ml_score*100)}% | "
+    f"BERT: {round(bert_score*100)}% | "
+    f"Transformer: {round(trans_score*100)}% | "
+    f"Final: {round(final_score*100)}%. "
+    f"{pattern_result.explanation if pattern_score > 0.1 else 'AI models flagged this content — manual review recommended.'}"
+)
 
     return ScanResponse(
         risk=risk,

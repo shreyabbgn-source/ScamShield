@@ -85,6 +85,145 @@ function parseLayerScores(explanation) {
   return scores
 }
 
+function FeedbackRow({ result, file, caption }) {
+  const [feedback, setFeedback] = useState(null) // 'correct' | 'incorrect'
+  const [submitted, setSubmitted] = useState(false)
+  const [comment, setComment] = useState('')
+  const [showComment, setShowComment] = useState(false)
+
+  async function submitFeedback(type) {
+    setFeedback(type)
+    if (type === 'incorrect') {
+      setShowComment(true)
+      return // wait for comment + confirm
+    }
+    await sendFeedback(type, '')
+  }
+
+  async function confirmFeedback() {
+    await sendFeedback(feedback, comment)
+  }
+
+  async function sendFeedback(type, note) {
+    try {
+      await axios.post(`${API}/feedback`, {
+        feedback: type,
+        comment: note,
+        predicted_risk: result.risk,
+        predicted_category: result.category,
+        scam_probability: result.scam_probability,
+        caption: caption || '',
+        ocr_text: result.ocr_text || '',
+      })
+      setSubmitted(true)
+      setShowComment(false)
+    } catch {
+      // fail silently — feedback is non-critical
+      setSubmitted(true)
+    }
+  }
+
+  if (submitted) {
+    return (
+      <div style={{
+        background: '#12121e', borderRadius: 14,
+        border: '1px solid #2a2a3e', padding: '16px 20px',
+        display: 'flex', alignItems: 'center', gap: 10,
+      }}>
+        <span style={{ fontSize: 18 }}>🙏</span>
+        <p style={{ fontSize: 13, color: '#a0a0c0', margin: 0 }}>
+          Thanks for your feedback — it helps improve ScamShield AI.
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div style={{
+      background: '#12121e', borderRadius: 14,
+      border: '1px solid #2a2a3e', padding: '16px 20px',
+    }}>
+      <p style={{
+        fontSize: 11, color: '#6b7280', fontWeight: 600,
+        textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12,
+      }}>
+        💬 Was this result correct?
+      </p>
+
+      {!showComment ? (
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button
+            onClick={() => submitFeedback('correct')}
+            style={{
+              flex: 1, padding: '10px 16px', borderRadius: 8,
+              background: feedback === 'correct' ? '#22c55e20' : '#1e1e30',
+              border: `1px solid ${feedback === 'correct' ? '#22c55e' : '#3a3a50'}`,
+              color: feedback === 'correct' ? '#22c55e' : '#a0a0c0',
+              fontSize: 13, fontWeight: 600, cursor: 'pointer',
+            }}
+          >
+            👍 Yes, correct
+          </button>
+          <button
+            onClick={() => submitFeedback('incorrect')}
+            style={{
+              flex: 1, padding: '10px 16px', borderRadius: 8,
+              background: feedback === 'incorrect' ? '#ef444420' : '#1e1e30',
+              border: `1px solid ${feedback === 'incorrect' ? '#ef4444' : '#3a3a50'}`,
+              color: feedback === 'incorrect' ? '#ef4444' : '#a0a0c0',
+              fontSize: 13, fontWeight: 600, cursor: 'pointer',
+            }}
+          >
+            👎 No, wrong result
+          </button>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>
+            What should the correct result be? (optional)
+          </p>
+          <textarea
+            value={comment}
+            onChange={e => setComment(e.target.value)}
+            placeholder="e.g. This is a legitimate ad, not a scam..."
+            rows={2}
+            style={{
+              width: '100%', background: '#0a0a14',
+              border: '1px solid #3a3a50', borderRadius: 8,
+              padding: '8px 12px', color: '#e0e0f0',
+              fontSize: 12, resize: 'none', outline: 'none',
+              fontFamily: 'inherit', boxSizing: 'border-box',
+            }}
+          />
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              onClick={confirmFeedback}
+              style={{
+                flex: 1, padding: '9px 16px', borderRadius: 8,
+                background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                border: 'none', color: '#fff',
+                fontSize: 13, fontWeight: 600, cursor: 'pointer',
+              }}
+            >
+              Submit Feedback
+            </button>
+            <button
+              onClick={() => { setShowComment(false); setFeedback(null) }}
+              style={{
+                padding: '9px 16px', borderRadius: 8,
+                background: '#1e1e30', border: '1px solid #3a3a50',
+                color: '#a0a0c0', fontSize: 13, cursor: 'pointer',
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function App() {
   const [caption, setCaption]   = useState('')
   const [file, setFile]         = useState(null)
@@ -564,6 +703,9 @@ export default function App() {
                 ))}
               </div>
             </div>
+
+            {/* ROW 8 — Human Feedback */}
+            <FeedbackRow result={result} file={file} caption={caption} />
 
           </div>
         )}

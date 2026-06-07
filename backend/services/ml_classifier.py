@@ -251,21 +251,95 @@ LEGITIMATE_SAMPLES = [
     "google selected you claim free reward gift card click link",
     "loyalty reward claim your amazon voucher selected employee",
     "you are winner claim gift card limited time redeem now",
+    
+    # Phishing / bank fraud patterns (from MHA brochure)
+"may i have your account details otp password",
+"share your otp atm pin cvv urgent bank verification",
+"your account will be blocked share otp immediately",
+"net banking password required urgent verification",
+"bank employee calling for account details otp",
+
+# Too good to be true (tip #25 explicitly)
+"earn money with little or no work guaranteed",
+"make money on investment with little or no risk",
+"too good to be true earn from home no work",
+
+# Fake emergency scam (tip #23)
+"your family member met accident urgent money transfer needed",
+"hospital calling emergency money required transfer now",
+"accident hospital urgent fund transfer family member",
+
+# Fake app/link scams (tip #26, #28)  
+"click link install ewallet app sms social media",
+"download app link whatsapp earn money install now",
+# ── From MHA Cybercrime Brochure — Scam patterns ──
+# Bank/OTP phishing
+"may i have your account details sir bank employee calling",
+"share your otp atm pin cvv number bank verification urgent",
+"net banking password required share immediately account blocked",
+"bank calling verify account details otp password urgent",
+"email from bank click link verify account details now",
+"your bank account will be suspended share otp immediately",
+"cvv number expiry date required bank verification call",
+"phone banking pin required urgent bank employee calling",
+"bank alert account suspended verify otp click link now",
+"netbanking password share karo account band ho jayega",
+
+# Too good to be true investment
+"earn money with little or no work guaranteed daily income",
+"make money on investment with little or no risk guaranteed",
+"too good to be true offer earn from home no experience",
+"small investment huge returns guaranteed no risk involved",
+"earn daily income from home with zero effort guaranteed",
+
+# Fake emergency scam
+"your family member met accident urgent money transfer needed",
+"hospital calling emergency money required transfer now",
+"accident hospital urgent fund transfer family member injured",
+"your son met accident send money urgently hospital calling",
+"emergency transfer money family member accident hospital",
+
+# Fake app and link scams
+"click link install ewallet app sms whatsapp social media",
+"download app link whatsapp earn money install now",
+"install app link shared sms get reward cashback now",
+"follow link download banking app verify account click",
+"app link shared email install immediately account verify",
+
+# Fake shopping/deal scams
+"search engine result best deal click shop now lowest price",
+"unknown website huge discount buy now limited time offer",
+"50% off all products shop now unfamiliar website deal",
+"buy now huge discount unknown site click link shop",
+
+# Card cloning / ATM fraud
+"card details required swipe pos terminal sales person",
+"atm pin capture cctv keylogger public computer banking",
+"save card details ewallet secure convenient shop online",
+"public wifi banking transaction safe secure login now",
+"autofill card number cvv browser form online payment",
+
+# Impersonation scams
+"posing as bank employee requesting otp account details",
+"claiming to be from bank asking password pin cvv urgent",
+"fake bank email link verify account details click now",
+"third party extension plugin browser track activity steal",
+"keylogger public computer capture password bank details",
 ]
 
 MODEL_PATH = os.path.join(os.path.dirname(__file__), "scam_model.pkl")
 
 
 def train_model():
-    texts = SCAM_SAMPLES + LEGITIMATE_SAMPLES
-    labels = [1] * len(SCAM_SAMPLES) + [0] * len(LEGITIMATE_SAMPLES)
+    from services.dataset_builder import build_combined_dataset
+    texts, labels = build_combined_dataset()
+    print(f"[ML] Training TF-IDF on {len(texts)} samples...")
 
     pipeline = Pipeline([
         ("tfidf", TfidfVectorizer(
-            ngram_range=(1, 3),      # unigrams, bigrams, trigrams
-            max_features=5000,
+            ngram_range=(1, 3),
+            max_features=10000,
             sublinear_tf=True,
-            analyzer="word",
             min_df=1,
         )),
         ("clf", LogisticRegression(
@@ -280,24 +354,30 @@ def train_model():
     with open(MODEL_PATH, "wb") as f:
         pickle.dump(pipeline, f)
 
-    print("[ML] Model trained and saved.")
+    print(f"[ML] Model trained on {len(texts)} samples and saved.")
     return pipeline
-
-
-def load_model():
-    if os.path.exists(MODEL_PATH):
-        with open(MODEL_PATH, "rb") as f:
-            return pickle.load(f)
-    return train_model()
-
-
-# Load or train on startup
-_model = load_model()
 
 
 def ml_scam_score(text: str) -> float:
     """Returns probability 0.0-1.0 that text is a scam."""
+    if _model is None:
+        raise RuntimeError("[ML] Model not loaded.")
     if not text.strip():
         return 0.5
     proba = _model.predict_proba([text.lower()])[0]
     return round(float(proba[1]), 3)
+
+# Add this function after train_model()
+def load_model():
+    global _model
+    if os.path.exists(MODEL_PATH):
+        with open(MODEL_PATH, "rb") as f:
+            _model = pickle.load(f)
+        print("[ML] Model loaded from disk.")
+    else:
+        print("[ML] No saved model found, training new model...")
+        _model = train_model()
+
+# ── Module-level init (runs on import) ──
+_model = None
+load_model()

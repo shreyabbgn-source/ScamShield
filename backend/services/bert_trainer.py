@@ -7,8 +7,10 @@ from transformers import (
     TrainingArguments,
 )
 from torch.utils.data import Dataset
+from services.dataset_builder import build_combined_dataset
 
 MODEL_SAVE_PATH = os.path.join(os.path.dirname(__file__), "bert_scam_model")
+
 
 TRAINING_DATA = [
     # ── DIRECT INVESTMENT SCAMS ──
@@ -385,10 +387,8 @@ class ScamDataset(Dataset):
 
 
 def train_bert_model():
-    print(f"[BERT] Training on {len(TRAINING_DATA)} samples ({sum(1 for _,l in TRAINING_DATA if l==1)} scam, {sum(1 for _,l in TRAINING_DATA if l==0)} legitimate)...")
-
-    texts  = [t for t, _ in TRAINING_DATA]
-    labels = [l for _, l in TRAINING_DATA]
+    texts, labels = build_combined_dataset()
+    print(f"[BERT] Training on {len(texts)} real samples...")
 
     tokenizer = DistilBertTokenizerFast.from_pretrained("distilbert-base-uncased")
     encodings = tokenizer(texts, truncation=True, padding=True, max_length=128)
@@ -401,12 +401,11 @@ def train_bert_model():
 
     training_args = TrainingArguments(
         output_dir=MODEL_SAVE_PATH,
-        num_train_epochs=12,
-        per_device_train_batch_size=16,
-        per_device_eval_batch_size=16,
-        warmup_steps=20,
+        num_train_epochs=5,
+        per_device_train_batch_size=32,
+        warmup_steps=50,
         weight_decay=0.01,
-        logging_steps=50,
+        logging_steps=100,
         save_strategy="no",
         report_to="none",
         learning_rate=2e-5,
@@ -421,5 +420,5 @@ def train_bert_model():
     trainer.train()
     model.save_pretrained(MODEL_SAVE_PATH)
     tokenizer.save_pretrained(MODEL_SAVE_PATH)
-    print("[BERT] Fine-tuning complete. Model saved.")
+    print("[BERT] Training complete on real dataset.")
     return model, tokenizer
