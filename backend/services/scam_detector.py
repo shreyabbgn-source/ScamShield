@@ -1,6 +1,6 @@
 import re
 from textblob import TextBlob
-from models.response import ScanResponse
+from ..models.response import ScanResponse
 
 SCAM_PATTERNS = {
 

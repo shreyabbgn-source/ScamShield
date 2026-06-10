@@ -2,9 +2,9 @@
 Run this after training to get accuracy metrics.
 Command: python evaluate.py
 """
-from services.bert_classifier import bert_scam_score
-from services.ml_classifier import ml_scam_score
-from services.ensemble import ensemble_detect
+from .services.bert_classifier import bert_scam_score
+from .services.ml_classifier import ml_scam_score
+from .services.ensemble import ensemble_detect
 
 # 30 test cases with known labels
 # 1 = scam, 0 = legitimate

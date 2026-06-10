@@ -331,7 +331,7 @@ MODEL_PATH = os.path.join(os.path.dirname(__file__), "scam_model.pkl")
 
 
 def train_model():
-    from services.dataset_builder import build_combined_dataset
+    from .dataset_builder import build_combined_dataset
     texts, labels = build_combined_dataset()
     print(f"[ML] Training TF-IDF on {len(texts)} samples...")
 

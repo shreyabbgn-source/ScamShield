@@ -7,7 +7,7 @@ from transformers import (
     TrainingArguments,
 )
 from torch.utils.data import Dataset
-from services.dataset_builder import build_combined_dataset
+from .dataset_builder import build_combined_dataset
 
 MODEL_SAVE_PATH = os.path.join(os.path.dirname(__file__), "bert_scam_model")
 
