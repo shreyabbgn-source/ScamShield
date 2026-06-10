@@ -5,8 +5,6 @@ WORKDIR /app
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     tesseract-ocr \
-    libopencv-dev \
-    python3-opencv \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install Python dependencies
