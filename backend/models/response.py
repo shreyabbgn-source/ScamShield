@@ -1,7 +1,5 @@
-from pydantic import BaseModel
-from typing import List, Optional, Any
-# from pydantic import BaseModel
-# from typing import List, Optional, Any
+from pydantic import BaseModel, ConfigDict
+from typing import List, Optional
 
 class UrlAnalysis(BaseModel):
     url: str
@@ -21,31 +19,29 @@ class ImageQuality(BaseModel):
     sharpness_score: float
 
 class ScanResponse(BaseModel):
-    risk: str
+    model_config = ConfigDict(extra="allow")
+
+    # Legacy & Platform Core Bindings
+    risk: str  # Kept as legacy fallback mapping
+    risk_level: Optional[str] = None  # Decoupled threat metric
     scam_probability: float
+    threat_score: int  # Dynamic weight-based score (0-100)
+    
+    content_type: str = "General"
     category: str
     confidence: float
     evidence: List[str]
     explanation: str
+
+    # OCR Telemetry Metadata
     ocr_text: Optional[str] = ""
     ocr_confidence: Optional[str] = "N/A"
     text_visibility: Optional[str] = "N/A"
+
+    # Deep Analysis Blocks
     suspicious_urls: Optional[List[str]] = []
     brand_impersonation: Optional[List[str]] = []
     url_analysis: Optional[List[UrlAnalysis]] = []
     image_quality: Optional[ImageQuality] = None
     weighted_evidence: Optional[List[dict]] = []
-
-# class ScanResponse(BaseModel):
-#     risk: str
-#     scam_probability: float
-#     category: str
-#     confidence: float
-#     evidence: List[str]
-#     explanation: str
-#     ocr_text: Optional[str] = ""
-#     ocr_confidence: Optional[str] = "N/A"
-#     text_visibility: Optional[str] = "N/A"
-#     suspicious_urls: Optional[List[str]] = []
-#     brand_impersonation: Optional[List[str]] = []
-#     qr_analysis: Optional[Any] = None
+    

@@ -3,6 +3,24 @@ from textblob import TextBlob
 from ..models.response import ScanResponse
 
 SCAM_PATTERNS = {
+    "betting": [
+        "1xbet", "parimatch", "bet now", "sports betting", "cricket betting", 
+        "ipl betting", "casino", "casino bonus", "real money gaming", 
+        "real cash winnings", "bet and win", "online betting",
+    ],
+    
+    "customer_care": [
+        "customer care", "helpline", "support number", "refund support", 
+        "technical support", "amazon support", "flipkart support", 
+        "paytm support", "phonepe support", "gpay support", "anydesk", 
+        "teamviewer", "remote access",
+    ],
+    
+    "upi": [
+        "upi collect request", "scan qr", "receive money", "approve request", 
+        "payment pending", "upi blocked", "upi verification", "refund pending", 
+        "gpay reward", "phonepe reward", "paytm reward",
+    ],
 
     "investment": [
         "double", "paisa double", "paise double", "double money", "double your",
@@ -173,25 +191,105 @@ ALL_PATTERNS = [(category, phrase)
                 for phrase in phrases]
 
 CATEGORY_MAP = {
-    "investment": ["double", "guaranteed return", "no risk", "ghar baithe",
-                   "daily income", "25 din", "invest", "paisa lagao",
-                   "pay rs", "pay ₹", "send rs", "get back",
-                   "dm me for contact", "only serious", "slots filling"],
-    "crypto":     ["crypto", "bitcoin", "ethereum"],
-    "lottery":    ["you won", "lucky winner", "prize", "jeeta",
-                   "gift card", "claim your", "selected", "reward"],
-    "job":        ["part time", "work from home", "data entry", "typing job",
-                   "earn extra", "flexible hours"],
-    "mlm":        ["refer and earn", "network marketing", "mlm"],
-    "loan":       ["instant loan", "instant approval", "no documents"],
-    "banking":    ["kyc", "kyc update", "kyc expire", "account blocked",
-                   "account restricted", "otp", "upi verify",
-                   "icici", "sbi", "hdfc", "temporarily restricted",
-                   "24 ghante", "dear customer", "bank team"],
-    "task":       ["task complete", "like karo", "screenshot bhejo",
-                   "advance deposit", "registration fee", "deposit to unlock"],
-    "reward":     ["gift card", "claim your", "you've been selected",
-                   "employee reward", "redeem", "amazon reward"],
+    "betting":       ["1xbet", "parimatch", "bet now", "sports betting", "cricket betting", "casino"],
+    "customer_care": ["customer care", "helpline", "support number", "refund support", "anydesk", "teamviewer"],
+    "upi":           ["upi collect request", "scan qr", "approve request", "payment pending", "upi blocked"],
+    "investment":    ["double", "guaranteed return", "no risk", "ghar baithe",
+                      "daily income", "25 din", "invest", "paisa lagao",
+                      "pay rs", "pay ₹", "send rs", "get back",
+                      "dm me for contact", "only serious", "slots filling"],
+    "crypto":        ["crypto", "bitcoin", "ethereum"],
+    "lottery":       ["you won", "lucky winner", "prize", "jeeta",
+                      "gift card", "claim your", "selected", "reward"],
+    "job":           ["part time", "work from home", "data entry", "typing job",
+                      "earn extra", "flexible hours"],
+    "mlm":           ["refer and earn", "network marketing", "mlm"],
+    "loan":          ["instant loan", "instant approval", "no documents"],
+    "banking":       ["kyc", "kyc update", "kyc expire", "account blocked",
+                      "account restricted", "otp", "upi verify",
+                      "icici", "sbi", "hdfc", "temporarily restricted",
+                      "24 ghante", "dear customer", "bank team"],
+    "task":          ["task complete", "like karo", "screenshot bhejo",
+                      "advance deposit", "registration fee", "deposit to unlock"],
+    "reward":        ["gift card", "claim your", "you've been selected",
+                      "employee reward", "redeem", "amazon reward"],
+}
+
+INDICATOR_MAP = {
+    "customer care": "Customer-care impersonation",
+    "helpline": "Support-number solicitation",
+    "refund support": "Refund lure",
+    
+    "upi collect request": "UPI collect request",
+    "approve request": "Payment approval request",
+    "scan qr": "QR payment instruction",
+    
+    "bet now": "Betting solicitation",
+    "sports betting": "Real-money betting language",
+    "casino": "Online gambling language",
+
+    "guaranteed return": "Guaranteed return promise",
+    "guaranteed profit": "Guaranteed profit claim",
+    "passive income": "Passive income promise",
+    "daily income": "Daily earnings claim",
+    "earn daily": "Daily earnings claim",
+    "refer and earn": "Referral-based earnings",
+    "network marketing": "MLM/network marketing language",
+    "claim your prize": "Prize claim solicitation",
+    "you won": "Lottery winner claim",
+    "instant loan": "Instant loan offer",
+    "no documents": "Loan without verification",
+    "kyc update": "KYC verification request",
+    "account blocked": "Account restriction threat",
+    "otp": "OTP request",
+    "click this link": "Suspicious link instruction",
+    "work from home": "Work-from-home recruitment",
+    "data entry": "Data-entry recruitment",
+    "registration fee": "Upfront fee request",
+    "deposit to unlock": "Unlock-payment request",
+}
+
+INDICATOR_WEIGHTS = {
+    "Customer-care impersonation": 22,
+    "Support-number solicitation": 20,
+    "Refund lure": 22,
+    
+    "UPI collect request": 25,
+    "Payment approval request": 25,
+    "QR payment instruction": 20,
+    
+    "Betting solicitation": 18,
+    "Real-money betting language": 20,
+    "Online gambling language": 20,
+
+    "Guaranteed return promise": 25,
+    "Guaranteed profit claim": 25,
+    "Passive income promise": 20,
+    "Daily earnings claim": 20,
+    
+    "Referral-based earnings": 18,
+    "MLM/network marketing language": 18,
+    
+    "Prize claim solicitation": 20,
+    "Lottery winner claim": 25,
+    
+    "Instant loan offer": 15,
+    "Loan without verification": 20,
+    
+    "KYC verification request": 20,
+    "Account restriction threat": 20,
+    "OTP request": 25,
+    
+    "Suspicious link instruction": 20,
+    
+    "Work-from-home recruitment": 10,
+    "Data-entry recruitment": 10,
+    
+    "Upfront fee request": 25,
+    "Unlock-payment request": 25,
+    
+    "Urgency language detected": 8,
+    "High-confidence promotional language": 5,
 }
 
 SAFE_CONTEXT = [
@@ -221,7 +319,6 @@ HYPE_WORDS = [
 def check_multiplier_scam(text: str):
     text_lower = text.lower()
 
-    # Skip if clearly food/health/fitness context
     safe_contexts = [
         "off", "discount", "cashback", "sale", "coupon", "above", "over",
         "minimum", "order", "recipe", "calories", "calorie", "cal", "cals",
@@ -238,7 +335,6 @@ def check_multiplier_scam(text: str):
         if safe in text_lower:
             return False, ""
 
-    # Must contain financial/investment keywords nearby
     financial_keywords = [
         "invest", "earn", "income", "profit", "return", "paisa", "paise",
         "money", "rupee", "rupees", "kamao", "kamai", "pay", "send",
@@ -259,18 +355,6 @@ def check_multiplier_scam(text: str):
                 if smaller >= 50 and larger / smaller >= 4:
                     return True, f"Suspicious return: {smaller} → {larger} ({int(larger/smaller)}x)"
 
-    return False, ""
-
-    numbers = re.findall(r'\d+', text)
-    numbers = [int(n) for n in numbers if 0 < int(n) < 10_000_000]
-
-    if len(numbers) >= 2:
-        for i in range(len(numbers)):
-            for j in range(i + 1, len(numbers)):
-                smaller = min(numbers[i], numbers[j])
-                larger = max(numbers[i], numbers[j])
-                if smaller >= 10 and larger / smaller >= 4:
-                    return True, f"Suspicious return: {smaller} → {larger} ({int(larger/smaller)}x)"
     return False, ""
 
 
@@ -312,21 +396,36 @@ def detect_scam(ocr_text: str = "", caption: str = "") -> ScanResponse:
 
     for category, phrase in ALL_PATTERNS:
         if phrase.lower() in combined:
-            found_evidence.append(phrase)
+            indicator = INDICATOR_MAP.get(
+                phrase.lower(),
+                phrase.replace("_", " ").title()
+            )
+            if indicator not in found_evidence:
+                found_evidence.append(indicator)
             category_hits[category] += 1
 
     is_multiplier, mult_evidence = check_multiplier_scam(combined)
     if is_multiplier:
-        found_evidence.append(mult_evidence)
+        if mult_evidence not in found_evidence:
+            found_evidence.append(mult_evidence)
         category_hits["investment"] += 2
 
     sentiment = analyze_sentiment(combined)
     boost = sentiment_boost(sentiment)
 
     if sentiment["urgency_hits"]:
-        found_evidence.append(f"Urgency: {', '.join(sentiment['urgency_hits'][:2])}")
+        found_evidence.append("Urgency language detected")
     if sentiment["hype_hits"]:
-        found_evidence.append(f"Hype language: {', '.join(sentiment['hype_hits'][:2])}")
+        found_evidence.append("High-confidence promotional language")
+
+    weighted_evidence = []
+    for indicator in found_evidence:
+        weighted_evidence.append({
+            "indicator": indicator,
+            "weight": INDICATOR_WEIGHTS.get(indicator, 5)
+        })
+    
+    weighted_evidence.sort(key=lambda x: x["weight"], reverse=True)
 
     safe_penalty = 0.15 if has_safe_context(combined) and len(found_evidence) <= 2 else 0.0
 
@@ -343,6 +442,7 @@ def detect_scam(ocr_text: str = "", caption: str = "") -> ScanResponse:
         base = min(0.96, 0.86 + (hit_count - 3) * 0.03)
 
     scam_probability = max(0.02, min(0.98, base + boost - safe_penalty))
+    threat_score = round(scam_probability * 100)  # ← add this line
 
     if scam_probability < 0.30:
         risk = "LOW"
@@ -353,32 +453,56 @@ def detect_scam(ocr_text: str = "", caption: str = "") -> ScanResponse:
     else:
         risk = "CRITICAL"
 
-    # Best category using CATEGORY_MAP
     cat_scores = {cat: 0 for cat in CATEGORY_MAP}
     for cat, keywords in CATEGORY_MAP.items():
         for kw in keywords:
             if kw in combined:
                 cat_scores[cat] += 1
+
     best_cat = max(cat_scores, key=cat_scores.get)
-    category = f"{best_cat}_scam" if cat_scores[best_cat] > 0 else "unknown"
+
+    content_type = (
+        best_cat.replace("_", " ").title()
+        if cat_scores[best_cat] > 0
+        else "General"
+    )
+
+    if cat_scores[best_cat] == 0:
+        category = "Unknown"
+    elif scam_probability < 0.30:
+        category = "Legitimate Content"
+    elif scam_probability < 0.60:
+        category = "Suspicious Content"
+    else:
+        category = f"{content_type} Scam"
 
     if hit_count == 0 and boost < 0.08:
-        explanation = "No scam patterns detected. Content appears safe."
+        explanation = "No cybercrime signatures detected. Content structurally appears within normal thresholds."
     else:
         parts = []
         if found_evidence:
-            parts.append(f"Found {hit_count} indicator(s): {', '.join(str(e) for e in found_evidence[:3])}")
+            parts.append(
+                f"Flagged {hit_count} indicator(s): "
+                f"{', '.join(str(e) for e in found_evidence[:3])}"
+            )
         if boost > 0.05:
-            parts.append(f"Suspicious tone (polarity {sentiment['polarity']}, subjectivity {sentiment['subjectivity']})")
+            parts.append(
+                f"Risk amplification via sentiment markers "
+                f"(polarity {sentiment['polarity']})"
+            )
         if safe_penalty > 0:
-            parts.append("Partial safe context detected")
-        explanation = ". ".join(parts) + f". Category: {category.replace('_', ' ')}."
+            parts.append("Risk index mitigated via standard commerce terminology rules")
+
+        explanation = ". ".join(parts) + f". Threat Class: {category}."
 
     return ScanResponse(
         risk=risk,
         scam_probability=round(scam_probability, 2),
+        threat_score=threat_score,
+        content_type=content_type,
         category=category,
         confidence=round(scam_probability, 2),
         evidence=[str(e) for e in found_evidence[:6]],
+        weighted_evidence=weighted_evidence,
         explanation=explanation,
     )

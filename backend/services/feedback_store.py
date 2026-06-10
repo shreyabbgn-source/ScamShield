@@ -1,8 +1,7 @@
 import csv
 import os
 from datetime import datetime
-
-FEEDBACK_FILE = "feedback_data.csv"
+FEEDBACK_FILE = os.path.join(os.path.dirname(__file__), "../feedback_data.csv")
 FIELDNAMES = ["timestamp", "text", "predicted_category", "predicted_risk", "scam_probability", "is_correct", "correct_category"]
 
 def init_feedback_file():

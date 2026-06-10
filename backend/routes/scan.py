@@ -5,6 +5,7 @@ from ..services.ensemble import ensemble_detect
 from ..services.url_analyzer import analyze_urls_in_text
 from ..services.image_analyzer import analyze_image_quality
 from typing import Optional
+from routes.stats import log_scan
 
 router = APIRouter()
 
@@ -67,6 +68,10 @@ async def scan_content(
 
     # Run ensemble detection
     result = ensemble_detect(ocr_text=ocr_text, caption=caption)
+
+    # after result = ensemble_detect(...)
+    combined_text = (ocr_text + " " + (caption or "")).strip()
+    log_scan(result.dict(), combined_text)
 
     # URL analysis on full text
     all_text = ocr_text + " " + (caption or "")

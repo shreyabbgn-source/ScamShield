@@ -17,3 +17,5 @@ app.add_middleware(
 app.include_router(scan_router, prefix="/api")
 app.include_router(feedback_router, prefix="/api")
 app.include_router(retrain_router, prefix="/api")
+from routes.stats import router as stats_router
+app.include_router(stats_router)
