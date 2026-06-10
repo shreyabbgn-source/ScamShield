@@ -1,8 +1,8 @@
-from services.scam_detector import detect_scam as pattern_detect
-from services.ml_classifier import ml_scam_score
-from services.transformer_classifier import transformer_scam_score
-from services.bert_classifier import bert_scam_score
-from models.response import ScanResponse
+from .scam_detector import detect_scam as pattern_detect
+from .ml_classifier import ml_scam_score
+from .transformer_classifier import transformer_scam_score
+from .bert_classifier import bert_scam_score
+from ..models.response import ScanResponse
 
 W_PATTERN = 0.25
 W_ML      = 0.25

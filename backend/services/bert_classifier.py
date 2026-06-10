@@ -1,7 +1,7 @@
 import os
 import torch
 from transformers import DistilBertTokenizerFast, DistilBertForSequenceClassification
-from services.bert_trainer import train_bert_model, MODEL_SAVE_PATH
+from .bert_trainer import train_bert_model, MODEL_SAVE_PATH
 
 # Load or train on startup
 if os.path.exists(os.path.join(MODEL_SAVE_PATH, "config.json")):
