@@ -5,7 +5,7 @@ from ..services.ensemble import ensemble_detect
 from ..services.url_analyzer import analyze_urls_in_text
 from ..services.image_analyzer import analyze_image_quality
 from typing import Optional
-from routes.stats import log_scan
+from .stats import log_scan
 
 router = APIRouter()
 
