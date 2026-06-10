@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 from typing import Optional
-from services.feedback_store import save_feedback, get_feedback_stats
+from ..services.feedback_store import save_feedback, get_feedback_stats
 
 router = APIRouter()
 

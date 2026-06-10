@@ -1,9 +1,9 @@
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
-from models.response import ScanResponse
-from services.ocr import extract_text_from_bytes
-from services.ensemble import ensemble_detect
-from services.url_analyzer import analyze_urls_in_text
-from services.image_analyzer import analyze_image_quality
+from ..models.response import ScanResponse
+from ..services.ocr import extract_text_from_bytes
+from ..services.ensemble import ensemble_detect
+from ..services.url_analyzer import analyze_urls_in_text
+from ..services.image_analyzer import analyze_image_quality
 from typing import Optional
 
 router = APIRouter()
@@ -121,10 +121,10 @@ async def scan_content(
     return result
 
 #     from fastapi import APIRouter, UploadFile, File, Form, HTTPException
-# from models.response import ScanResponse
-# from services.ocr import extract_text_from_bytes
-# from services.ensemble import ensemble_detect
-# from services.qr_analyzer import analyze_qr
+# from ..models.response import ScanResponse
+# from ..services.ocr import extract_text_from_bytes
+# from ..services.ensemble import ensemble_detect
+# from ..services.qr_analyzer import analyze_qr
 # from typing import Optional
 
 # router = APIRouter()
