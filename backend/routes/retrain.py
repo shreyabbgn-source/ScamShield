@@ -1,6 +1,6 @@
 from fastapi import APIRouter
-from services.feedback_store import get_incorrect_samples
-from services.bert_trainer import TRAINING_DATA, train_bert_model
+from ..services.feedback_store import get_incorrect_samples
+from ..services.bert_trainer import TRAINING_DATA, train_bert_model
 import os, shutil
 
 router = APIRouter()
